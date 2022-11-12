@@ -1,0 +1,13 @@
+package hedging.dao;
+
+import javax.persistence.Id;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import hedging.entity.Transactions;
+
+@Repository
+public interface TransactionsDAO extends JpaRepository<Transactions, Id>{
+
+}

@@ -1,0 +1,13 @@
+package hedging.dao;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import hedging.entity.Accounts;
+
+@Repository
+public interface AccountsDAO extends JpaRepository<Accounts, Integer>{
+	@Query(value = "SELECT sum(balance) FROM Accounts", nativeQuery = true)
+    int sumBalance();
+}

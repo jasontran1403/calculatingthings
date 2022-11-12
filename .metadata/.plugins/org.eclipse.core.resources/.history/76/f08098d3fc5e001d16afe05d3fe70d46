@@ -1,0 +1,14 @@
+package hedging.dao;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import hedging.entity.Accounts;
+import hedging.entity.Transactions;
+
+@Repository
+public interface TransactionsDAO extends JpaRepository<Transactions, Integer>{
+	@Query(value = "insert into Transac values (1,2,3)", nativeQuery = true)
+	void insert(double hedgingAmount, String hedgingSize, Accounts account);
+}

@@ -1,0 +1,5 @@
+package hedging.entity;
+
+public class Report {
+
+}

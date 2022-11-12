@@ -1,0 +1,34 @@
+package hedging.entity;
+
+public class Report {
+	private double balance;
+	private int orders;
+	private int numberofHigh;
+	private int numberofLow;
+	public double getBalance() {
+		return balance;
+	}
+	public void setBalance(double balance) {
+		this.balance = balance;
+	}
+	public int getOrders() {
+		return orders;
+	}
+	public void setOrders(int orders) {
+		this.orders = orders;
+	}
+	public int getNumberofHigh() {
+		return numberofHigh;
+	}
+	public void setNumberofHigh(int numberofHigh) {
+		this.numberofHigh = numberofHigh;
+	}
+	public int getNumberofLow() {
+		return numberofLow;
+	}
+	public void setNumberofLow(int numberofLow) {
+		this.numberofLow = numberofLow;
+	}
+	
+
+}

@@ -1,0 +1,157 @@
+package hedging.restcontroller;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+
+import hedging.dao.AccountsDAO;
+import hedging.dao.TransactionsDAO;
+import hedging.entity.Accounts;
+import hedging.entity.Report;
+import hedging.entity.Transactions;
+
+@RestController
+@CrossOrigin(origins = "*")
+public class HomeController {
+	@Autowired
+	AccountsDAO accDAO;
+
+	@Autowired
+	TransactionsDAO transDAO;
+
+	public static double FEE;
+	public static double ORDERRATE;
+	public static List<Accounts> listHedging;
+	
+	public static double totalFee = 0;
+
+	public void hedging(List<Accounts> accounts) {	
+		for (int i = 0; i < accounts.size(); i++) {		
+			if (accounts.get(i).getBalance() >= accounts.get(i).getStoploss() && accounts.get(i).getBalance() <= accounts.get(i).getStopprofit()) {
+				listHedging.add(accounts.get(i));
+			}		
+		}
+
+		long min = 0;
+		long max = listHedging.size();
+
+		String WIN = "WIN";
+		String LOSE = "LOSE";
+
+		Set<Integer> treeSet = new TreeSet<>();
+
+		while (listHedging.size() / 2 != treeSet.size()) {
+			int random_index = (int) Math.floor(Math.random() * max + min);
+			treeSet.add(random_index);
+		}
+		List<Transactions> listtranssac = new ArrayList<>();
+		for (int i = 0; i < listHedging.size(); i++) {
+			double hedgingamount = listHedging.get(i).getBalance() * ORDERRATE;
+			Transactions transac = new Transactions();
+			transac.setId(i+1);
+			transac.setAccount(listHedging.get(i));
+			transac.setHedgingAmout(hedgingamount);
+			listtranssac.add(transac);
+		}
+
+		for (int i = 0; i < listHedging.size(); i++) {
+			for (int j : treeSet) {
+				listtranssac.get(j).setHedgingSize(WIN);
+			}
+		}
+		
+		for (int i = 0; i < listtranssac.size(); i++) {
+			if (!listtranssac.get(i).getHedgingSize().equalsIgnoreCase(WIN)) {
+				listtranssac.get(i).setHedgingSize(LOSE);
+			}
+		}
+		
+
+		for (int i = 0; i < listtranssac.size(); i++) {
+			Transactions transTemp = new Transactions();
+			transTemp.setHedgingAmout(listtranssac.get(i).getHedgingAmout());
+			transTemp.setHedgingSize(listtranssac.get(i).getHedgingSize());
+			transTemp.setAccount(listtranssac.get(i).getAccount());
+			transDAO.save(transTemp);
+		}
+		
+		
+		int random_Result = (int) Math.floor(Math.random() * 2 + 1);
+		String hedgingResult = random_Result == 1 ? "WIN" : "LOSE";
+		for (int i = 0; i < listtranssac.size(); i++) {
+			if (listtranssac.get(i).getHedgingSize().equalsIgnoreCase(hedgingResult)) {
+				Accounts accUpdateBalance = accDAO.getById(listtranssac.get(i).getAccount().getId());
+				double currentBalance = accUpdateBalance.getBalance();
+				double hedgingAmount = currentBalance*ORDERRATE;
+				double winningFee = hedgingAmount*FEE;
+				accUpdateBalance.setBalance(currentBalance+hedgingAmount-winningFee);
+				totalFee += winningFee;
+				accDAO.save(accUpdateBalance);
+			}else {
+				Accounts accUpdateBalance = accDAO.getById(listtranssac.get(i).getAccount().getId());
+				double currentBalance = accUpdateBalance.getBalance();
+				double hedgingAmount = currentBalance*ORDERRATE;
+				accUpdateBalance.setBalance(currentBalance-hedgingAmount);
+				accDAO.save(accUpdateBalance);
+			}
+		}
+		
+
+	}
+
+	@GetMapping("/clearData")
+	public void deleteAllData() {
+		totalFee = 0;
+		transDAO.deleteAll();
+		accDAO.deleteAll();
+	}
+
+	@GetMapping("/addData/{accountNumber}/{capital}/{stoploss}/{stopprofit}/{hedgingpercent}/{fee}")
+	public List<Accounts> initiateData(@PathVariable("capital") double capital,
+			@PathVariable("accountNumber") int accountNumber, @PathVariable("stoploss") double stoploss, @PathVariable("stopprofit") double stopprofit, @PathVariable("hedgingpercent") double hedgingpercent, @PathVariable("fee") double fee) {
+		for (int i = 1; i <= accountNumber; i++) {
+			ORDERRATE = hedgingpercent;
+			FEE = fee;
+			Accounts account = new Accounts();
+			account.setId(i);
+			account.setAccountname("Account No." + i);
+			account.setBalance(capital);
+			account.setStopprofit(capital+capital*(stopprofit)/100);
+			account.setStoploss(capital-capital*(stoploss)/100);
+			accDAO.save(account);
+		}
+		return accDAO.findAll();
+	}
+	
+	@GetMapping("/showData")
+	public List<Accounts> showData() {
+		return accDAO.findAll();
+		
+	}
+
+	@GetMapping("/calculate")
+	public List<Accounts> calculate() {
+		List<Accounts> listAccounts = accDAO.findAll();
+		listHedging = new ArrayList<>();
+		hedging(listAccounts);
+		return accDAO.findAllSorted();
+	}
+	
+	@GetMapping("/statistic")
+	public List<Report> report() {
+		List<Report> report = new ArrayList<>();
+		Report rp = new Report();
+		rp.setBalance(totalFee);
+		rp.setOrders(transDAO.countTransaction());
+		report.add(rp);
+		return report;
+	}
+
+}

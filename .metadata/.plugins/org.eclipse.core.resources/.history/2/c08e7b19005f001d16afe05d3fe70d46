@@ -1,0 +1,53 @@
+package hedging.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "Account")
+public class Accounts {
+	@Id
+	@Column(name = "Id")
+    private int Id;
+
+    @Column(name = "Accountname")
+    private String Accountname;
+    
+    @Column(name = "Balance")
+    private double balance;
+
+	public int getId() {
+		return Id;
+	}
+
+	public void setId(int id) {
+		Id = id;
+	}
+
+	public String getAccountname() {
+		return Accountname;
+	}
+
+	public void setAccountname(String accountname) {
+		Accountname = accountname;
+	}
+
+	public double getBalance() {
+		return balance;
+	}
+
+	public void setBalance(double balance) {
+		this.balance = balance;
+	}
+    
+    
+}

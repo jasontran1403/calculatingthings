@@ -1,0 +1,8 @@
+package hedging.service.serviceImpl;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class TransactionsServiceImpl implements TransactionService {
+
+}
